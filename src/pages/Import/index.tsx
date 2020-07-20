@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useHistory } from 'react-router-dom';
+import Swal from 'sweetalert2';
 
 import filesize from 'filesize';
 
@@ -23,19 +24,31 @@ const Import: React.FC = () => {
   const history = useHistory();
 
   async function handleUpload(): Promise<void> {
-    // const data = new FormData();
-
-    // TODO
+    const data = new FormData();
+    const file = uploadedFiles[0].file
+    data.set('file', file)
 
     try {
-      // await api.post('/transactions/import', data);
+      await api.post('/transactions/import', data);
+      await Swal.fire('Yeaaah...', 'Importação realizada com sucesso!', 'success');
+      history.goBack();
     } catch (err) {
-      // console.log(err.response.error);
+      if (err.response.status >= 500) {
+        Swal.fire('Oops...', 'Tenha certeza que o CSV está no formato correto!', 'error');
+      } else{
+        Swal.fire('Oops...', err.response.data.message, 'error');
+      }
+      setUploadedFiles([]);
     }
   }
 
   function submitFile(files: File[]): void {
-    // TODO
+    const filesProp = files.flatMap<FileProps>(file => ({
+      file,
+      name: file.name,
+      readableSize: filesize(file.size),
+    }));
+    setUploadedFiles(filesProp);
   }
 
   return (
